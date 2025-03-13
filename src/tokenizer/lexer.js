@@ -1,4 +1,5 @@
 import { generate_token_data } from "./dictionary.js";
+import { set_token } from './dictionary.js';  // Import the set_token function
 import Token from "./token.js";
 
 class Lexer {
@@ -13,9 +14,8 @@ class Lexer {
     tokenize() {
         while (this.position < this.source.length) {
             let currentChar = this.source[this.position]; // Current character
-    
             let type = generate_token_data(currentChar); // Get type for this single character
-    
+
             switch (this.state) {
                 case 1:  // State 1 (start state)
                     if (type === 'identifier') {
@@ -30,7 +30,7 @@ class Lexer {
                         this.state = 6;  // Move to State 6 for space
                     }
                     break;
-    
+
                 case 2:  // State 2 (identifier state)
                     this.currentString = currentChar;  // Start fresh with the first character
     
@@ -55,7 +55,48 @@ class Lexer {
                     this.position++;  
                     this.state = 1;
                     break;
-    
+
+                case 3:  // State 3 (integer state) -> Works like State 2 but for numbers
+                    this.currentString = currentChar; // Start fresh with the first digit
+
+                    while (this.position + 1 < this.source.length) {
+                        let nextChar = this.source[this.position + 1];
+                        let nextCharType = generate_token_data(nextChar);
+
+                        if (nextCharType === 'integer') {
+                            this.position++;
+                            this.currentString += nextChar;
+                        } else {
+                            break; // Stop if it's no longer a number
+                        }
+                    }
+
+                    // Store the completed integer
+                    this.tokens.push(new Token('integer', this.currentString));
+                    console.log(`Token: "${this.currentString}", Type: integer`);
+
+                    // Reset
+                    this.currentString = "";
+                    this.position++;  
+                    this.state = 1;
+                    break;
+
+                    case 5:  // Symbol state
+                    case 5:  // Symbol state
+    this.currentString = currentChar; // Store the single symbol
+
+    // Use set_token to generate the token
+    const token = set_token('symbol', this.currentString);
+
+    // Store the token
+    this.tokens.push(new Token(token.type, token.value));
+    console.log(`Token: "${token.value}", Type: ${token.type}`);
+
+    // Reset
+    this.currentString = "";
+    this.position++;  // Move to the next character
+    this.state = 1;   // Reset to the start state
+    break;
                 case 6:  // State 6 (space state)
                     this.currentString = currentChar; // Start fresh
     
@@ -65,8 +106,8 @@ class Lexer {
                     }
     
                     // Store the space token
-                    this.tokens.push(new Token('space', this.currentString));
-                    console.log(`Token: "${this.currentString}", Type: space`);
+                    //this.tokens.push(new Token('space', this.currentString));
+                    //console.log(`Token: "${this.currentString}", Type: space`);
     
                     // Reset
                     this.currentString = "";
@@ -77,12 +118,29 @@ class Lexer {
         }
     }
 }
+
 // Test the lexer with sample input
-const testInput = "let x = 10;";
+const testInput = `class Animal {
+ init() {}
+ method speak() Void { return println(0); }
+}
+class Cat extends Animal {
+ init() { super(); }
+ method speak() Void { return println(1); }
+}
+class Dog extends Animal {
+ init() { super(); }
+ method speak() Void { return println(2); }
+}
+Animal cat;
+Animal dog;
+cat = new Cat();
+dog = new Dog();
+cat.speak();
+dog.speak();`;
 
 const lexer = new Lexer(testInput);
 lexer.tokenize();
 
-// You can inspect the generated tokens in lexer.tokens
+// Inspect the generated tokens
 console.log(lexer.tokens);
-
