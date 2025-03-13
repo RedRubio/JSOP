@@ -1,4 +1,5 @@
 import Token from "./token.js"; // Import the Token class
+import TokenizerError from "./tokenizeError.js";
 
 // In dictionary.js or a similar file
 export function generate_token_data(input) {
