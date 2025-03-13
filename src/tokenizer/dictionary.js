@@ -6,11 +6,12 @@ export function generate_token_data(input) {
     const keywords = new Set([
         'let', 'if', 'while', 'else', 'break', 'println',
         'return', 'new', 'for', 'true', 'false', 'self',
-        'func', 'impl', 'trait', 'method', 'struct'
+        'func', 'impl', 'trait', 'method', 'struct',
+        'class', 'extends', 'init'
     ]);
 
     const types = new Set([
-        'Int', 'Void', 'Boolean', 'Self'
+        'Int', 'Void', 'Boolean', 'Self', 'Object', 'String'
     ]);
 
     // Check if the input matches a keyword
@@ -24,7 +25,7 @@ export function generate_token_data(input) {
     }
 
     // Check if the input is a valid identifier (alphabet or underscore)
-    if (/^[a-zA-Z_]\w*$/.test(input)) {
+    if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(input)) {
         return 'identifier';
     }
 
@@ -34,7 +35,7 @@ export function generate_token_data(input) {
     }
 
     // Check if the input is a symbol (operators, parentheses, etc.)
-    if (/[\+\-\*\/=\(\)\{\};,.\!\<\>\:]/.test(input)) {
+    if (/^(\+|\-|\*|\/|=|<|>|!=|<=|>=|\(|\)|\{|\}|;|,|\.|:)$/.test(input)) {
         return 'symbol';
     }
 
@@ -62,6 +63,18 @@ export function set_token(type, value) {
                     break;
                 case "<":
                     finalType = "lessThan";  // Less Than
+                    break;
+                case "<=":
+                    finalType = "lessThanOrEqual"; //Less Than or equal
+                    break;
+                case ">":
+                    finalType = "greaterThan"; //Greater Than
+                    break;
+                case ">=":
+                     finalType = "greaterThanOrEqual"; //Greater Than or equal
+                    break;
+                case "!=":
+                    finalType = "notEquals";  // Not Equals
                     break;
                 case "=":
                     finalType = "equals";  // Equals
@@ -98,10 +111,26 @@ export function set_token(type, value) {
             break;
 
         // Add more case blocks here as other types (like 'identifier', 'integer', etc.)
-        
-        default:
-            finalType = "unknown";  // If the type is not recognized, return "unknown"
+        case "string":
+            finalType = "stringLiteral";
             break;
+        case "integer":
+            finalType = "integerLiteral";
+            break;
+        case "identifier":
+            finalType = "identifier";
+            break;
+        case "keyword":
+            finalType = "keyword";
+            break;
+        case "type":
+            finalType = "type";
+            break;
+        default:
+            finalType = "unknown";
+            break;
+              // If the type is not recognized, return "unknown"
+            
     }
 
     return { type: finalType, value: value };  // Return the final token type and value
