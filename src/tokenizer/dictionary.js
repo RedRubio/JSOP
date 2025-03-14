@@ -1,51 +1,31 @@
 import Token from "./token.js"; // Import the Token class
-import TokenizerError from "./tokenizeError.js";
 
-// In dictionary.js or a similar file
-export function generate_token_data(input) {
-    const keywords = new Set([
-        'let', 'if', 'while', 'else', 'break', 'println',
-        'return', 'new', 'for', 'true', 'false', 'self',
-        'func', 'impl', 'trait', 'method', 'struct',
-        'class', 'extends', 'init'
-    ]);
-
-    const types = new Set([
-        'Int', 'Void', 'Boolean', 'Self', 'Object', 'String'
-    ]);
-
-    // Check if the input matches a keyword
-    if (keywords.has(input.toLowerCase())) {
-        return 'keyword';
+//
+export function get_char_data(char) {
+    if (/[a-zA-Z_]/.test(char)) {
+        return 'alphabet';
     }
-
-    // Check if the input matches a type
-    if (types.has(input)) {
-        return 'type';
+    if (/\d/.test(char)) {
+        return 'number';
     }
-
-    // Check if the input is a valid identifier (alphabet or underscore)
-    if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(input)) {
-        return 'identifier';
-    }
-
-    // Check if the input is a valid integer (digit only)
-    if (/^\d+$/.test(input)) {
-        return 'integer';
-    }
-
-    // Check if the input is a symbol (operators, parentheses, etc.)
-    if (/^(\+|\-|\*|\/|=|<|>|!=|<=|>=|\(|\)|\{|\}|;|,|\.|:)$/.test(input)) {
-        return 'symbol';
-    }
-
-    // Check if it's a blank space
-    if (/\s/.test(input)) {
+    if (/\s/.test(char)) {
         return 'space';
     }
-    console.log(`Token Value: "${token_value}", Type: "${token_type}"`); // Debugging
-    return null;  // If no match, return null
+    if (/[\+\-\*\/=\(\)\{\};,.\!\<\>\:\|]/.test(char)) { 
+        return 'symbol'; 
+    }
+    return null;  // Unknown character
 }
+
+const keywords = new Set([
+    'let', 'if', 'while', 'else', 'break', 'println',
+    'return', 'new', 'for', 'true', 'false', 'self',
+    'func', 'impl', 'trait', 'method', 'struct', 'class'
+]);
+
+const types = new Set([
+    'Int', 'Void', 'Boolean', 'Self'
+]);
 
 export function set_token(type, value) {
     let finalType = null;
@@ -64,20 +44,20 @@ export function set_token(type, value) {
                 case "<":
                     finalType = "lessThan";  // Less Than
                     break;
-                case "<=":
-                    finalType = "lessThanOrEqual"; //Less Than or equal
+                case "=":
+                    finalType = "equals";  // Equals (for single equal sign)
                     break;
-                case ">":
-                    finalType = "greaterThan"; //Greater Than
-                    break;
-                case ">=":
-                     finalType = "greaterThanOrEqual"; //Greater Than or equal
+                case "==":
+                    finalType = "equalsEquals";  // Double equals (equality comparison)
                     break;
                 case "!=":
-                    finalType = "notEquals";  // Not Equals
+                    finalType = "notEquals";  // Not equals
                     break;
-                case "=":
-                    finalType = "equals";  // Equals
+                case "|":
+                    finalType = "pipe";  // Single pipe (for logical OR)
+                    break;
+                case "||":
+                    finalType = "logicalOr";  // Double pipe (logical OR operator)
                     break;
                 case ",":
                     finalType = "comma";  // Comma
@@ -110,27 +90,22 @@ export function set_token(type, value) {
             }
             break;
 
-        // Add more case blocks here as other types (like 'identifier', 'integer', etc.)
-        case "string":
-            finalType = "stringLiteral";
-            break;
-        case "integer":
-            finalType = "integerLiteral";
-            break;
         case "identifier":
-            finalType = "identifier";
+            // Handle keywords by checking if the value exists in the keywords set
+            if (keywords.has(value)) {
+                finalType = "keyword";  // This is a keyword
+            } else if (types.has(value)) {
+                finalType = "type";  // This is a valid type
+            } else {
+                finalType = "identifier";  // If it's not a recognized type
+            }
             break;
-        case "keyword":
-            finalType = "keyword";
-            break;
-        case "type":
-            finalType = "type";
-            break;
+
+        // Add more case blocks here as other types (like 'identifier', 'integer', etc.)
+        
         default:
-            finalType = "unknown";
+            finalType = "unknown";  // If the type is not recognized, return "unknown"
             break;
-              // If the type is not recognized, return "unknown"
-            
     }
 
     return { type: finalType, value: value };  // Return the final token type and value
