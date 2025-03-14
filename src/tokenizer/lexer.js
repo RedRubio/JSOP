@@ -23,7 +23,7 @@ class Lexer {
                     } else if (type === 'number') {
                         this.state = 3;  // Move to State 3 for integer
                     } else if (type === 'symbol') {
-                        this.state = 3;  // Move to State 5 for symbol
+                        this.state = 4;  // Move to State 4 for symbol
                     } else{
                     this.position++;
                     }
@@ -79,22 +79,34 @@ class Lexer {
                     this.position++;  
                     this.state = 1;
                     break;
+                    
+                    case 4:  // Symbol state
+                        this.currentString = currentChar; // Store the single symbol
 
-                    case 5:  // Symbol state
-                    case 5:  // Symbol state
-    this.currentString = currentChar; // Store the single symbol
+                        // Check if the next character creates a two-character symbol
+                        if (this.position + 1 < this.source.length) {
+                            let nextChar = this.source[this.position + 1];
+                        // Check for specific two-character symbols (e.g., '==' or '!=')
+                            if ((this.currentString === "=" && nextChar === "=") || 
+                            (this.currentString === "!" && nextChar === "=") ||
+                            (this.currentString === "|" && nextChar === "|")) {
+                            // Append the next character to form the two-character symbol
+                            this.currentString += nextChar;
+                            this.position++;  // Move the position forward
+                        }
+                    }
 
-    // Use set_token to generate the token
-    const token = set_token('symbol', this.currentString);
+                        // Use set_token to generate the token
 
-    // Store the token
-    this.tokens.push(new Token(token.type, token.value));
-    console.log(`Token: "${token.value}", Type: ${token.type}`);
+                        tokenData = set_token("symbol", this.currentString);
+                       
+                        // Store the token
+                        this.tokens.push(new Token(tokenData.type, tokenData.value));
 
-    // Reset
-    this.currentString = "";
-    this.position++;  // Move to the next character
-    this.state = 1;   // Reset to the start state
+                        // Reset
+                        this.currentString = "";
+                        this.position++;  // Move to the next character
+                        this.state = 1;   // Reset to the start state
     break;
                 case 6:  // State 6 (space state)
                     this.currentString = currentChar; // Start fresh
@@ -119,7 +131,15 @@ class Lexer {
 }
 
 // Test the lexer with sample input
-const testInput = `class 3453  duck4 rate6 struct6 struct int car var pickle4 45454`;
+const testInput = `class Animal {
+ init() {}
+ method speak() Void { return println(0); }
+}
+class Cat ex == tend != s Animal {
+ init() { sup || er(); }
+ method speak() Void { return println(1); }
+}
+`;
 
 const lexer = new Lexer(testInput);
 lexer.tokenize();

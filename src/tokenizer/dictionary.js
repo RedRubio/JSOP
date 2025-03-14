@@ -11,8 +11,8 @@ export function get_char_data(char) {
     if (/\s/.test(char)) {
         return 'space';
     }
-    if (/[\+\-\*\/=\(\)\{\};,.\!\<\>\:]/.test(char)) {
-        return 'symbol';
+    if (/[\+\-\*\/=\(\)\{\};,.\!\<\>\:\|]/.test(char)) { 
+        return 'symbol'; 
     }
     return null;  // Unknown character
 }
@@ -45,7 +45,19 @@ export function set_token(type, value) {
                     finalType = "lessThan";  // Less Than
                     break;
                 case "=":
-                    finalType = "equals";  // Equals
+                    finalType = "equals";  // Equals (for single equal sign)
+                    break;
+                case "==":
+                    finalType = "equalsEquals";  // Double equals (equality comparison)
+                    break;
+                case "!=":
+                    finalType = "notEquals";  // Not equals
+                    break;
+                case "|":
+                    finalType = "pipe";  // Single pipe (for logical OR)
+                    break;
+                case "||":
+                    finalType = "logicalOr";  // Double pipe (logical OR operator)
                     break;
                 case ",":
                     finalType = "comma";  // Comma
