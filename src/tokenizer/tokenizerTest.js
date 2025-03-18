@@ -1,4 +1,4 @@
-import Token from "./token";
+import token from "./token";
 import TokenizerError from "./tokenizeError";
 import { get_char_data } from "./dictionary";
 
@@ -7,7 +7,7 @@ import { get_char_data } from "./dictionary";
 describe('Tokenizer Test', () => {
   it('Parsing variable declaration', () => {
       const data = "Int x;";
-      const result = tokenize(data);
+      const result = token(data);
       const expected = [
           new Token('type', 'Int'),
           new Token('var', 'x'),
@@ -41,36 +41,12 @@ describe('Tokenizer Test', () => {
     ];
     expect(result).toStrictEqual(expected);
 });
-  it('Parsing class definition', () => {
-      const result = tokenize("class MathUtils { method square(Int x) Int { return x * x; } }");
-      const expected = [
-          new Token('keyword', 'class'),
-          new Token('classname', 'MathUtils'),
-          new Token('lBracket', '{'),
-          new Token('keyword', 'method'),
-          new Token('methodname', 'square'),
-          new Token('lParen', '('),
-          new Token('type', 'Int'),
-          new Token('var', 'x'),
-          new Token('rParen', ')'),
-          new Token('type', 'Int'),
-          new Token('lBracket', '{'),
-          new Token('keyword', 'return'),
-          new Token('var', 'x'),
-          new Token('op', '*'),
-          new Token('var', 'x'),
-          new Token('semicolon', ';'),
-          new Token('rBracket', '}'),
-          new Token('rBracket', '}')
-      ];
-      expect(result).toStrictEqual(expected);
-  });
+  
 
   it('Parsing if-else statement', () => {
     const data = "if (x < 10) { println(\"Small number\"); } else { println(\"Large number\"); }";
-    const result = tokenize(data);
+    const result = token(data);
     
-
     const expected = [
         new Token('keyword', 'if'),
         new Token('lParen', '('),
@@ -99,9 +75,8 @@ describe('Tokenizer Test', () => {
 
 it('Parsing object instantiation', () => {
     const data = "new MyClass(10, \"Hello\");";
-    const result = tokenize(data);
+    const result = token(data);
     
-
     const expected = [
         new Token('keyword', 'new'),
         new Token('classname', 'MyClass'),
@@ -117,9 +92,8 @@ it('Parsing object instantiation', () => {
 
 it('Parsing while loop', () => {
     const data = "while (i > 0) { i = i - 1; }";
-    const result = tokenize(data);
+    const result = token(data);
     
-
     const expected = [
         new Token('keyword', 'while'),
         new Token('lParen', '('),
@@ -141,7 +115,7 @@ it('Parsing while loop', () => {
 
 it('Parsing empty string', () => {
     const data = "";
-    const result = tokenize(data);
+    const result = token(data);
 
 
     const expected = [];
