@@ -14,6 +14,7 @@ describe('Tokenizer Test', () => {
           new Token('semicolon', ';')
       ];
       expect(result).toStrictEqual(expected);
+      console.log("Success: Parsing Variable declaration");
   });
 
   it('Parsing method definition', () => {
@@ -40,6 +41,7 @@ describe('Tokenizer Test', () => {
         new Token('rBracket', '}')
     ];
     expect(result).toStrictEqual(expected);
+    console.log("Success: Parsing Method definition");
 });
   
 
@@ -71,6 +73,7 @@ describe('Tokenizer Test', () => {
         new Token('rBracket', '}')
     ];
     expect(result).toStrictEqual(expected);
+    console.log("Success: Parsing if-else statement");
 });
 
 it('Parsing object instantiation', () => {
@@ -88,9 +91,10 @@ it('Parsing object instantiation', () => {
         new Token('semicolon', ';')
     ];
     expect(result).toStrictEqual(expected);
+    console.log("Successs: Parsing object instantiation");
 });
 
-it('Parsing while loop', () => {
+it('Parsing while loop', () => { 
     const data = "while (i > 0) { i = i - 1; }";
     const result = token(data);
     
@@ -111,15 +115,52 @@ it('Parsing while loop', () => {
         new Token('rBracket', '}')
     ];
     expect(result).toStrictEqual(expected);
+    console.log("Success: Parsing while loop");
 });
 
 it('Parsing empty string', () => {
     const data = "";
     const result = token(data);
 
-
     const expected = [];
     expect(result).toStrictEqual(expected);
+    console.log("Success: Parsing empty string");
+});
+
+it('Parsing Invalid data', () =>{
+    const data = "**"; 
+
+    try{
+        const result = token(data);
+        console.log("Failure: Expected an error but got:", result);
+    }catch(err){
+        expect(err).toStrictEqual(new TokenizerError('Unacceptable Token: *'));
+        console.log("Parsing unnacceptable data");
+    }
+
+});
+
+it('Parsing Invalid method', () =>{
+    const data = "method invalidMethod(**)";
+    try{
+        const result = token(data);
+        console.log("Failure: Expected an error but got:", result);
+    }catch(err){
+        expect(err).toStrictEqual(new TokenizerError('Unacceptable Token: *'));
+        console.log("Parsing unnacceptable method");
+    }
+
+});
+
+it('Parsing missing spaces between tokens', () =>{
+    const data = "exampleClass{exampleMethod():Int{return20;}}";
+    try{
+        const result = tokenize(data);
+        console.log("Failure: Expect an error got", result);
+    }catch(err){
+        expect(err).toStrictEqual(new TokenizerError('Missing spaces between tokens'));
+        console.log("Parsing missing spaces");
+    }
 });
 
 });
