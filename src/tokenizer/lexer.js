@@ -1,5 +1,5 @@
 import { get_char_data } from "./dictionary.js";
-import { set_token } from './dictionary.js';  // Import the set_token function
+import { set_token } from './dictionary.js';
 import Token from "./token.js";
 
 class Lexer {
@@ -9,6 +9,7 @@ class Lexer {
         this.tokens = [];          // List to store extracted tokens
         this.currentString = "";   // The string being built
         this.state = 1;            // Start in state 1
+        this.stringDelimiter = ""; // Track whether using ' or "
     }
 
     tokenize() {
@@ -24,6 +25,10 @@ class Lexer {
                         this.state = 3;  // Move to State 3 for integer
                     } else if (type === 'symbol') {
                         this.state = 4;  // Move to State 4 for symbol
+                    } else if (currentChar === '"' || currentChar === "'") {
+                        this.stringDelimiter = currentChar; // Store whether ' or "
+                        this.currentString = ""; // Reset string buffer
+                        this.state = 5; // Transition to string state
                     } else{
                     this.position++;
                     }
@@ -107,7 +112,50 @@ class Lexer {
                         this.currentString = "";
                         this.position++;  // Move to the next character
                         this.state = 1;   // Reset to the start state
-    break;
+                        break;
+                     case 5:
+                    this.position++;
+                    while (this.position < this.source.length) {
+                        let nextChar = this.source[this.position];
+                        if (nextChar === this.stringDelimiter) { 
+                            // Closing quote found
+                            this.tokens.push(new Token("stringLiteral", this.currentString));
+                            this.currentString = "";
+                            this.position++;
+                            this.state = 1;
+                            break;
+                        } else {
+                            this.currentString += nextChar;
+                        }
+                        this.position++;
+                    }
+
+                    if (this.position >= this.source.length) {
+                        console.error("Unterminated string literal");
+                    }
+                    break;
+                case 5:
+                        this.position++;
+                        while (this.position < this.source.length) {
+                            let nextChar = this.source[this.position];
+                            if (nextChar === this.stringDelimiter) { 
+                                // Closing quote found
+                                tokenData = set_token("stringLiteral", this.currentString);
+                                this.tokens.push(new Token(tokenData.type, tokenData.value));
+                                this.currentString = "";
+                                this.position++;
+                                this.state = 1;
+                                break;
+                            } else {
+                                this.currentString += nextChar;
+                            }
+                            this.position++;
+                        }
+    
+                        if (this.position >= this.source.length) {
+                            console.error("Unterminated string literal");
+                        }
+                        break;
                 case 6:  // State 6 (space state)
                     this.currentString = currentChar; // Start fresh
     
@@ -137,7 +185,7 @@ const testInput = `class Animal {
 }
 class Cat ex == tend != s Animal {
  init() { sup || er(); }
- method speak() Void { return println(1); }
+ method speak() Void { return println(1);'string + 2' "other"}
 }
 `;
 
