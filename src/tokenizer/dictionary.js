@@ -18,13 +18,13 @@ export function get_char_data(char) {
 }
 
 const keywords = new Set([
-    'let', 'if', 'while', 'else', 'break', 'println',
-    'return', 'new', 'for', 'true', 'false', 'self',
-    'func', 'impl', 'trait', 'method', 'struct', 'class'
+    'if', 'while', 'else', 'break', 'return',
+    'true', 'false', 'println', 'new', 'for',
+    'method', 'struct', 'class', 'init', 'extends', 'super'
 ]);
 
 const types = new Set([
-    'Int', 'Void', 'Boolean', 'Self'
+    'Int', 'Void', 'Boolean'
 ]);
 
 export function set_token(type, value) {
@@ -82,6 +82,12 @@ export function set_token(type, value) {
                     break;
                 case "}":
                     finalType = "rCurlyBracket";  // Right Curly Bracket
+                    break;
+                case "+":
+                case "-":
+                case "*":
+                case "/":
+                    finalType = "op";  // For operators (+, -, *, /)
                     break;
                 // Add more symbols as necessary
                 default:
