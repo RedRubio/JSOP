@@ -2,7 +2,7 @@ import { get_char_data } from "./dictionary.js";
 import { set_token } from './dictionary.js';
 import Token from "./token.js";
 
-class Lexer {
+export default class Lexer {
     constructor(sourceCode) {
         this.source = sourceCode;  // The full source code as a string
         this.position = 0;         // Current position in the string
@@ -13,6 +13,11 @@ class Lexer {
     }
 
     tokenize() {
+        let position = 0;         // Current position in the string
+        let tokens = [];          // List to store extracted tokens
+        let currentString = "";   // The string being built
+        let state = 1;            // Start in state 1
+        let stringDelimiter = ""; // Track whether using ' or "
         while (this.position < this.source.length) {
             let currentChar = this.source[this.position]; // Current character
             let type = get_char_data(currentChar); // Get type for this single character
@@ -76,8 +81,7 @@ class Lexer {
                     }
                 
                     // Store the completed integer token using set_token
-                    tokenData = set_token("integer", this.currentString);
-                    this.tokens.push(new Token(tokenData.type, tokenData.value));
+                    this.tokens.push(new Token("integerLiteral", this.currentString));
                 
                     // Reset
                     this.currentString = "";
@@ -156,41 +160,19 @@ class Lexer {
                             console.error("Unterminated string literal");
                         }
                         break;
-                case 6:  // State 6 (space state)
-                    this.currentString = currentChar; // Start fresh
-    
-                    while (this.position + 1 < this.source.length && generate_token_data(this.source[this.position + 1]) === 'space') {
-                        this.position++;
-                        this.currentString += this.source[this.position];
-                    }
-    
-                    // Store the space token
-                    //this.tokens.push(new Token('space', this.currentString));
-                    //console.log(`Token: "${this.currentString}", Type: space`);
-    
-                    // Reset
-                    this.currentString = "";
-                    this.position++;  
-                    this.state = 1;
-                    break;
             }
         }
     }
 }
 
-// Test the lexer with sample input
-const testInput = `class Animal {
- init() {}
- method speak() Void { return println(0); }
-}
-class Cat ex == tend != s Animal {
- init() { sup || er(); }
- method speak() Void { return println(1);'string + 2' "other"}
-}
-`;
+// Run the lexer and output tokens directly
+export const runLexer = (sourceCode) => {
+    const lexer = new Lexer(sourceCode);  // Instantiate the Lexer with source code
+    lexer.tokenize();  // Tokenize the source code
+    return lexer.tokens;  // Return the generated tokens
+};
 
-const lexer = new Lexer(testInput);
-lexer.tokenize();
-
-// Inspect the generated tokens
-console.log(lexer.tokens);
+// Example usage
+//const sourceCode = `class Animal { method speak() { return 0; } }`;
+//const tokens = runLexer(sourceCode);  // Get tokens from lexer
+//console.log(tokens);  // Output tokens to the console
