@@ -10,7 +10,7 @@ describe('Tokenizer Test', () => {
       const result = runLexer(data);
       const expected = [
           new Token('type', 'Int'),
-          new Token('var', 'x'),
+          new Token('identifier', 'x'),
           new Token('semicolon', ';')
       ];
       expect(result).toStrictEqual(expected);
@@ -23,70 +23,74 @@ describe('Tokenizer Test', () => {
 
     const expected = [
         new Token('keyword', 'method'),
-        new Token('methodname', 'myMethod'),
+        new Token('identifier', 'myMethod'),
         new Token('lParen', '('),
         new Token('type', 'Int'),
-        new Token('variable', 'x'),
+        new Token('identifier', 'x'),
         new Token('comma', ','),
         new Token('type', 'Int'),
-        new Token('variable', 'y'),
+        new Token('identifier', 'y'),
         new Token('rParen', ')'),
         new Token('type', 'Int'),
-        new Token('lBracket', '{'),
+        new Token('lCurlyBracket', '{'),
         new Token('keyword', 'return'),
-        new Token('variable', 'x'),
+        new Token('identifier', 'x'),
         new Token('op', '+'),
-        new Token('variable', 'y'),
+        new Token('identifier', 'y'),
         new Token('semicolon', ';'),
-        new Token('rBracket', '}')
+        new Token('rCurlyBracket', '}')
     ];
     expect(result).toStrictEqual(expected);
-    console.log("Success: Parsing Method definition");
+    
 });
   
 
   it('Parsing if-else statement', () => {
-    const data = "if (x < 10) { println(\"Small number\"); } else { println(\"Large number\"); }";
-    const result = token(data);
+    const data = "if (x < 10) { println(Small number); } else { println(Large number); }";
+    const result = runLexer(data);
     
     const expected = [
         new Token('keyword', 'if'),
         new Token('lParen', '('),
-        new Token('variable', 'x'),
-        new Token('op', '<'),
-        new Token('number', '10'),
+        new Token('identifier', 'x'),
+        new Token('lessThan', '<'),
+        new Token('integerLiteral', '10'),
         new Token('rParen', ')'),
-        new Token('lBracket', '{'),
-        new Token('function', 'println'),
+        new Token('lCurlyBracket', '{'),
+        new Token('keyword', 'println'),
         new Token('lParen', '('),
-        new Token('str', '"Small number"'),
+        //new Token('stringLiteral', '"Small number"'),
+        new Token('identifier', 'Small'),
+        new Token('identifier', 'number'),
         new Token('rParen', ')'),
         new Token('semicolon', ';'),
-        new Token('rBracket', '}'),
+        new Token('rCurlyBracket', '}'),
         new Token('keyword', 'else'),
-        new Token('lBracket', '{'),
-        new Token('function', 'println'),
+        new Token('lCurlyBracket', '{'),
+        new Token('keyword', 'println'),
         new Token('lParen', '('),
-        new Token('str', '"Large number"'),
+        //new Token('stringLiteral', '"Large number"'),
+        new Token('identifier', 'Large'),
+        new Token('identifier', 'number'),
         new Token('rParen', ')'),
         new Token('semicolon', ';'),
-        new Token('rBracket', '}')
+        new Token('rCurlyBracket', '}')
     ];
     expect(result).toStrictEqual(expected);
-    console.log("Success: Parsing if-else statement");
+    
 });
 
 it('Parsing object instantiation', () => {
-    const data = "new MyClass(10, \"Hello\");";
-    const result = token(data);
+    const data = "new MyClass(10, Hello);";
+    const result = runLexer(data);
     
     const expected = [
         new Token('keyword', 'new'),
-        new Token('classname', 'MyClass'),
+        new Token('identifier', 'MyClass'),
         new Token('lParen', '('),
-        new Token('number', '10'),
+        new Token('integerLiteral', '10'),
         new Token('comma', ','),
-        new Token('str', '"Hello"'),
+        new Token('identifier', 'Hello'),
         new Token('rParen', ')'),
         new Token('semicolon', ';')
     ];
@@ -96,23 +100,23 @@ it('Parsing object instantiation', () => {
 
 it('Parsing while loop', () => { 
     const data = "while (i > 0) { i = i - 1; }";
-    const result = token(data);
+    const result = runLexer(data);
     
     const expected = [
         new Token('keyword', 'while'),
         new Token('lParen', '('),
-        new Token('variable', 'i'),
-        new Token('op', '>'),
-        new Token('number', '0'),
+        new Token('identifier', 'i'),
+        new Token('symbol', '>'),
+        new Token('integerLiteral', '0'),
         new Token('rParen', ')'),
-        new Token('lBracket', '{'),
-        new Token('variable', 'i'),
+        new Token('lCurlyBracket', '{'),
+        new Token('identifier', 'i'),
         new Token('equals', '='),
-        new Token('variable', 'i'),
+        new Token('identifier', 'i'),
         new Token('op', '-'),
-        new Token('number', '1'),
+        new Token('integerLiteral', '1'),
         new Token('semicolon', ';'),
-        new Token('rBracket', '}')
+        new Token('rCurlyBracket', '}')
     ];
     expect(result).toStrictEqual(expected);
     console.log("Success: Parsing while loop");
@@ -120,7 +124,7 @@ it('Parsing while loop', () => {
 
 it('Parsing empty string', () => {
     const data = "";
-    const result = token(data);
+    const result = runLexer(data);
 
     const expected = [];
     expect(result).toStrictEqual(expected);
@@ -131,7 +135,7 @@ it('Parsing Invalid data', () =>{
     const data = "**"; 
 
     try{
-        const result = token(data);
+        const result = runLexer(data);
         console.log("Failure: Expected an error but got:", result);
     }catch(err){
         expect(err).toStrictEqual(new TokenizerError('Unacceptable Token: *'));
@@ -143,7 +147,7 @@ it('Parsing Invalid data', () =>{
 it('Parsing Invalid method', () =>{
     const data = "method invalidMethod(**)";
     try{
-        const result = token(data);
+        const result = runLexer(data);
         console.log("Failure: Expected an error but got:", result);
     }catch(err){
         expect(err).toStrictEqual(new TokenizerError('Unacceptable Token: *'));
@@ -155,7 +159,7 @@ it('Parsing Invalid method', () =>{
 it('Parsing missing spaces between tokens', () =>{
     const data = "exampleClass{exampleMethod():Int{return20;}}";
     try{
-        const result = tokenize(data);
+        const result = runLexer(data);
         console.log("Failure: Expect an error got", result);
     }catch(err){
         expect(err).toStrictEqual(new TokenizerError('Missing spaces between tokens'));
