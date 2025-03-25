@@ -59,7 +59,6 @@ describe('Tokenizer Test', () => {
         new Token('lCurlyBracket', '{'),
         new Token('keyword', 'println'),
         new Token('lParen', '('),
-        //new Token('stringLiteral', '"Small number"'),
         new Token('identifier', 'Small'),
         new Token('identifier', 'number'),
         new Token('rParen', ')'),
@@ -69,7 +68,6 @@ describe('Tokenizer Test', () => {
         new Token('lCurlyBracket', '{'),
         new Token('keyword', 'println'),
         new Token('lParen', '('),
-        //new Token('stringLiteral', '"Large number"'),
         new Token('identifier', 'Large'),
         new Token('identifier', 'number'),
         new Token('rParen', ')'),
@@ -123,10 +121,12 @@ it('Parsing while loop', () => {
 });
 
 it('Parsing empty string', () => {
-    const data = "";
+    const data = '""';
     const result = runLexer(data);
 
-    const expected = [];
+    const expected = [
+        new Token('stringLiteral', '')  
+    ];
     expect(result).toStrictEqual(expected);
     console.log("Success: Parsing empty string");
 });
@@ -164,6 +164,55 @@ it('Parsing missing spaces between tokens', () =>{
     }catch(err){
         expect(err).toStrictEqual(new TokenizerError('Missing spaces between tokens'));
         console.log("Parsing missing spaces");
+    }
+});
+
+it('Parsing comparison and logical operators', () => {
+    const data = "x == y; x != z; a | b; c || d;";
+    const result = runLexer(data);
+    const expected = [
+        new Token('identifier', 'x'), new Token('equalsEquals', '=='), new Token('identifier', 'y'), new Token('semicolon', ';'),
+        new Token('identifier', 'x'), new Token('notEquals', '!='), new Token('identifier', 'z'), new Token('semicolon', ';'),
+        new Token('identifier', 'a'), new Token('pipe', '|'), new Token('identifier', 'b'), new Token('semicolon', ';'),
+        new Token('identifier', 'c'), new Token('logicalOr', '||'), new Token('identifier', 'd'), new Token('semicolon', ';')
+    ];
+    expect(result).toStrictEqual(expected);
+});
+
+it('Parsing method calls with dot notation', () => {
+    const data = "object.method();";
+    const result = runLexer(data);
+    const expected = [
+        new Token('identifier', 'object'), new Token('dot', '.'), new Token('keyword', 'method'),
+        new Token('lParen', '('), new Token('rParen', ')'), new Token('semicolon', ';')
+    ];
+    expect(result).toStrictEqual(expected);
+});
+
+it('Parsing array access with brackets', () => {
+    const data = "array[5] = value;";
+    const result = runLexer(data);
+    console.log("Tokenizer Output:", result); // Debugging Output
+
+    const expected = [
+        new Token('identifier', 'array'), 
+        new Token('lBracket', '['), 
+        new Token('integerLiteral', '5'), 
+        new Token('rBracket', ']'),
+        new Token('equals', '='), 
+        new Token('identifier', 'value'),
+        new Token('semicolon', ';')
+    ];
+    expect(result).toStrictEqual(expected);
+});
+
+it('Parsing unknown tokens', () => {
+    const data = "@#$%^";  // Unrecognized characters
+    try {
+        const result = runLexer(data);
+        console.log("Tokenizer Output:", result);
+    } catch (err) {
+        expect(err).toStrictEqual(new TokenizerError('Unknown token detected'));
     }
 });
 

@@ -11,7 +11,7 @@ export function get_char_data(char) {
     if (/\s/.test(char)) {
         return 'space';
     }
-    if (/[\+\-\*\/=\(\)\{\};,.\!\<\>\:\|]/.test(char)) { 
+    if (/[\+\-\*\/=\(\)\{\};,.\!\<\>\:\|\[\]]/.test(char)) { 
         return 'symbol'; 
     }
     return null;  // Unknown character
