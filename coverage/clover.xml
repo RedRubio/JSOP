@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1742939509500" clover="3.2.0">
-  <project timestamp="1742939509500" name="All files">
+<coverage generated="1743041840521" clover="3.2.0">
+  <project timestamp="1743041840522" name="All files">
     <metrics statements="162" coveredstatements="142" conditionals="76" coveredconditionals="68" methods="7" coveredmethods="6" elements="245" coveredelements="216" complexity="0" loc="162" ncloc="162" packages="2" files="4" classes="4"/>
     <package name="src.tokenizer">
       <metrics statements="161" coveredstatements="142" conditionals="76" coveredconditionals="68" methods="6" coveredmethods="6"/>
-      <file name="dictionary.js" path="C:\Users\chris\Documents\GitHub\JSOP\src\tokenizer\dictionary.js">
+      <file name="dictionary.js" path="C:\Users\ericr\Desktop\JSOP\src\tokenizer\dictionary.js">
         <metrics statements="60" coveredstatements="58" conditionals="36" coveredconditionals="35" methods="2" coveredmethods="2"/>
         <line num="5" count="480" type="cond" truecount="2" falsecount="0"/>
         <line num="6" count="232" type="stmt"/>
@@ -67,7 +67,7 @@
         <line num="114" count="0" type="stmt"/>
         <line num="117" count="109" type="stmt"/>
       </file>
-      <file name="lexer.js" path="C:\Users\chris\Documents\GitHub\JSOP\src\tokenizer\lexer.js">
+      <file name="lexer.js" path="C:\Users\ericr\Desktop\JSOP\src\tokenizer\lexer.js">
         <metrics statements="99" coveredstatements="82" conditionals="40" coveredconditionals="33" methods="3" coveredmethods="3"/>
         <line num="7" count="13" type="stmt"/>
         <line num="8" count="13" type="stmt"/>
@@ -169,7 +169,7 @@
         <line num="171" count="13" type="stmt"/>
         <line num="172" count="13" type="stmt"/>
       </file>
-      <file name="token.js" path="C:\Users\chris\Documents\GitHub\JSOP\src\tokenizer\token.js">
+      <file name="token.js" path="C:\Users\ericr\Desktop\JSOP\src\tokenizer\token.js">
         <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
         <line num="3" count="210" type="stmt"/>
         <line num="4" count="210" type="stmt"/>
@@ -177,7 +177,7 @@
     </package>
     <package name="tests.tokenizer">
       <metrics statements="1" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="0"/>
-      <file name="tokenizeError.js" path="C:\Users\chris\Documents\GitHub\JSOP\tests\tokenizer\tokenizeError.js">
+      <file name="tokenizeError.js" path="C:\Users\ericr\Desktop\JSOP\tests\tokenizer\tokenizeError.js">
         <metrics statements="1" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="0"/>
         <line num="3" count="0" type="stmt"/>
       </file>
