@@ -1,6 +1,176 @@
-//main problem is in parsePrimary method
+import Token from "./token.js";
 
-import { runLexer } from "./lexer.js";
+class ASTNode {
+    constructor(type) {
+        this.type = type;
+    }
+}
+
+class Program extends ASTNode {
+    constructor(classes, statements) {
+        super("Program");
+        this.classes = classes || [];
+        this.statements = statements || [];
+    }
+}
+
+class ClassDef extends ASTNode {
+    constructor(name, parent, variables, constructor, methods) {
+        super("ClassDef");
+        this.name = name;
+        this.parent = parent || null;
+        this.variables = variables || [];
+        this.constructor = constructor;
+        this.methods = methods || [];
+    }
+}
+
+class VarDec extends ASTNode {
+    constructor(type, name) {
+        super("VarDec");
+        this.type = type;
+        this.name = name;
+    }
+}
+
+class Constructor extends ASTNode {
+    constructor(parameters, superCall, statements) {
+        super("Constructor");
+        this.parameters = parameters || [];
+        this.superCall = superCall;
+        this.statements = statements || [];
+    }
+}
+
+class MethodDef extends ASTNode {
+    constructor(name, parameters, returnType, statements) {
+        super("MethodDef");
+        this.name = name;
+        this.parameters = parameters || [];
+        this.returnType = returnType;
+        this.statements = statements || [];
+    }
+}
+
+class SuperCall extends ASTNode {
+    constructor(arguments) {
+        super("SuperCall");
+        this.arguments = arguments || [];
+    }
+}
+
+class BlockStmt extends ASTNode {
+    constructor(statements) {
+        super("BlockStmt");
+        this.statements = statements || [];
+    }
+}
+
+class ExprStmt extends ASTNode {
+    constructor(expression) {
+        super("ExprStmt");
+        this.expression = expression;
+    }
+}
+
+class VarDecStmt extends ASTNode {
+    constructor(declaration) {
+        super("VarDecStmt");
+        this.declaration = declaration;
+    }
+}
+
+class AssignStmt extends ASTNode {
+    constructor(variable, expression) {
+        super("AssignStmt");
+        this.variable = variable;
+        this.expression = expression;
+    }
+}
+
+class WhileStmt extends ASTNode {
+    constructor(condition, body) {
+        super("WhileStmt");
+        this.condition = condition;
+        this.body = body;
+    }
+}
+
+class BreakStmt extends ASTNode {
+    constructor() {
+        super("BreakStmt");
+    }
+}
+
+class ReturnStmt extends ASTNode {
+    constructor(expression) {
+        super("ReturnStmt");
+        this.expression = expression;
+    }
+}
+
+class IfStmt extends ASTNode {
+    constructor(condition, thenBranch, elseBranch) {
+        super("IfStmt");
+        this.condition = condition;
+        this.thenBranch = thenBranch;
+        this.elseBranch = elseBranch;
+    }
+}
+
+class BinaryExpr extends ASTNode {
+    constructor(left, operator, right) {
+        super("BinaryExpr");
+        this.left = left;
+        this.operator = operator;
+        this.right = right;
+    }
+}
+
+class CallExpr extends ASTNode {
+    constructor(object, method, args) {
+        super("CallExpr");
+        this.object = object;
+        this.method = method;
+        this.args = args || [];
+    }
+}
+
+class NewExpr extends ASTNode {
+    constructor(className, args) {
+        super("NewExpr");
+        this.className = className;
+        this.args = args || [];
+    }
+}
+
+class PrintlnExpr extends ASTNode {
+    constructor(argument) {
+        super("PrintlnExpr");
+        this.argument = argument;
+    }
+}
+
+class VariableExpr extends ASTNode {
+    constructor(name) {
+        super("VariableExpr");
+        this.name = name;
+    }
+}
+
+class ThisExpr extends ASTNode {
+    constructor() {
+        super("ThisExpr");
+    }
+}
+
+class LiteralExpr extends ASTNode {
+    constructor(value, valueType) {
+        super("LiteralExpr");
+        this.value = value;
+        this.valueType = valueType;
+    }
+}
 
 class Parser {
     constructor(tokens) {
@@ -8,160 +178,413 @@ class Parser {
         this.current = 0;
     }
 
+    parse() {
+        try {
+            const classes = [];
+            while (this.peek().type === "keyword" && this.peek().data === "class") {
+                classes.push(this.classDefinition());
+            }
+
+            const statements = [];
+            while (!this.isAtEnd()) {
+                statements.push(this.statement());
+            }
+
+            return new Program(classes, statements);
+        } catch (error) {
+            console.error("Parse error:", error);
+            return null;
+        }
+    }
+
+    // Helper methods
     peek() {
         return this.tokens[this.current];
     }
 
+    previous() {
+        return this.tokens[this.current - 1];
+    }
+
+    isAtEnd() {
+        return this.current >= this.tokens.length;
+    }
+
     advance() {
-        return this.tokens[this.current++];
+        if (!this.isAtEnd()) this.current++;
+        return this.previous();
     }
 
-    match(type) {
-        if (this.peek() && this.peek().type === type) {
-            return this.advance();
-        }
-        return null;
+    check(type) {
+        if (this.isAtEnd()) return false;
+        return this.peek().type === type;
     }
 
-    parseProgram() {
-        let classes = [];
-        let statements = [];
-
-        while (this.current < this.tokens.length) {
-            if (this.peek().value === "class") {
-                classes.push(this.parseClass());
-            } else {
-                statements.push(this.parseStatement());
+    match(...types) {
+        for (const type of types) {
+            if (this.check(type)) {
+                this.advance();
+                return true;
             }
         }
-
-        return { type: "Program", classes, statements };
+        return false;
     }
 
-    parseClass() {
-        this.match("keyword"); // 'class'
-        let name = this.match("identifier").value;
-        let superclass = null;
+    consume(type, message) {
+        if (this.check(type)) return this.advance();
+        throw new Error(`${message} at token ${this.peek().type}, ${this.peek().data}`);
+    }
 
-        if (this.match("keyword")?.value === "extends") {
-            superclass = this.match("identifier").value;
+    // Grammar parsing methods
+
+    // classdef ::= `class` classname [`extends` classname] `{` (vardec `;`)* constructor methoddef* `}`
+    classDefinition() {
+        this.consume("keyword", "Expected 'class' keyword");
+        const className = this.consume("identifier", "Expected class name").data;
+        
+        let parentClass = null;
+        if (this.match("keyword") && this.previous().data === "extends") {
+            parentClass = this.consume("identifier", "Expected parent class name").data;
         }
-
-        this.match("lCurlyBracket"); // '{'
-        let fields = [];
-        let methods = [];
+        
+        this.consume("lCurlyBracket", "Expected '{' after class declaration");
+        
+        const variables = [];
+        while (this.peek().type === "type" || 
+               (this.peek().type === "identifier" && 
+                !this.checkNext("lParen") && 
+                !this.checkNext("keyword", "init"))) {
+            variables.push(this.varDeclaration());
+            this.consume("semicolon", "Expected ';' after variable declaration");
+        }
+        
         let constructor = null;
+        if (this.peek().type === "keyword" && this.peek().data === "init") {
+            constructor = this.constructorDefinition();
+        }
+        
+        const methods = [];
+        while (this.peek().type === "keyword" && this.peek().data === "method") {
+            methods.push(this.methodDefinition());
+        }
+        
+        this.consume("rCurlyBracket", "Expected '}' after class body");
+        
+        return new ClassDef(className, parentClass, variables, constructor, methods);
+    }
 
-        while (!this.match("rCurlyBracket")) {
-            let next = this.peek();
-            if (next.value === "init") {
-                constructor = this.parseConstructor();
-            } else if (next.value === "method") {
-                methods.push(this.parseMethod());
-            } else {
-                fields.push(this.parseVarDeclaration());
+    checkNext(type, data = null) {
+        if (this.current + 1 >= this.tokens.length) return false;
+        if (this.tokens[this.current + 1].type !== type) return false;
+        if (data !== null && this.tokens[this.current + 1].data !== data) return false;
+        return true;
+    }
+
+    // vardec ::= type var
+    varDeclaration() {
+        let type;
+        if (this.peek().type === "type") {
+            type = this.advance().data;
+        } else {
+            type = this.consume("identifier", "Expected type").data;
+        }
+        const name = this.consume("identifier", "Expected variable name").data;
+        return new VarDec(type, name);
+    }
+
+    // constructor ::= `init` `(` comma_vardec `)` `{` [`super` `(` comma_exp `)` `;` ] stmt* `}`
+    constructorDefinition() {
+        this.consume("keyword", "Expected 'init' keyword");
+        this.consume("lParen", "Expected '(' after 'init'");
+        
+        const parameters = [];
+        if (!this.check("rParen")) {
+            do {
+                parameters.push(this.varDeclaration());
+            } while (this.match("comma"));
+        }
+        
+        this.consume("rParen", "Expected ')' after parameters");
+        this.consume("lCurlyBracket", "Expected '{' after constructor parameters");
+        
+        let superCall = null;
+        if (this.match("keyword") && this.previous().data === "super") {
+            this.consume("lParen", "Expected '(' after 'super'");
+            
+            const args = [];
+            if (!this.check("rParen")) {
+                do {
+                    args.push(this.expression());
+                } while (this.match("comma"));
+            }
+            
+            this.consume("rParen", "Expected ')' after super arguments");
+            this.consume("semicolon", "Expected ';' after super call");
+            
+            superCall = new SuperCall(args);
+        }
+        
+        const statements = [];
+        while (!this.check("rCurlyBracket")) {
+            statements.push(this.statement());
+        }
+        
+        this.consume("rCurlyBracket", "Expected '}' after constructor body");
+        
+        return new Constructor(parameters, superCall, statements);
+    }
+
+    // methoddef ::= `method` methodname `(` comma_vardec `)` type `{` stmt* `}`
+    methodDefinition() {
+        this.consume("keyword", "Expected 'method' keyword");
+        const name = this.consume("identifier", "Expected method name").data;
+        
+        this.consume("lParen", "Expected '(' after method name");
+        
+        const parameters = [];
+        if (!this.check("rParen")) {
+            do {
+                parameters.push(this.varDeclaration());
+            } while (this.match("comma"));
+        }
+        
+        this.consume("rParen", "Expected ')' after parameters");
+        
+        let returnType;
+        if (this.peek().type === "type") {
+            returnType = this.advance().data;
+        } else {
+            returnType = this.consume("identifier", "Expected return type").data;
+        }
+        
+        this.consume("lCurlyBracket", "Expected '{' after method declaration");
+        
+        const statements = [];
+        while (!this.check("rCurlyBracket")) {
+            statements.push(this.statement());
+        }
+        
+        this.consume("rCurlyBracket", "Expected '}' after method body");
+        
+        return new MethodDef(name, parameters, returnType, statements);
+    }
+
+    // stmt ::= exp `;` | vardec `;` | var `=` exp `;` | `while` `(` exp `)` stmt
+    //      | `break` `;` | `return` [exp] `;` | `if` `(` exp `)` stmt [`else` stmt] | `{` stmt* `}`
+    statement() {
+        if (this.match("lCurlyBracket")) {
+            const statements = [];
+            while (!this.check("rCurlyBracket")) {
+                statements.push(this.statement());
+            }
+            this.consume("rCurlyBracket", "Expected '}' after block");
+            return new BlockStmt(statements);
+        }
+        
+        if (this.match("keyword")) {
+            const keyword = this.previous().data;
+            
+            if (keyword === "while") {
+                this.consume("lParen", "Expected '(' after 'while'");
+                const condition = this.expression();
+                this.consume("rParen", "Expected ')' after condition");
+                const body = this.statement();
+                return new WhileStmt(condition, body);
+            }
+            
+            if (keyword === "break") {
+                this.consume("semicolon", "Expected ';' after 'break'");
+                return new BreakStmt();
+            }
+            
+            if (keyword === "return") {
+                let value = null;
+                if (!this.check("semicolon")) {
+                    value = this.expression();
+                }
+                this.consume("semicolon", "Expected ';' after return value");
+                return new ReturnStmt(value);
+            }
+            
+            if (keyword === "if") {
+                this.consume("lParen", "Expected '(' after 'if'");
+                const condition = this.expression();
+                this.consume("rParen", "Expected ')' after condition");
+                
+                const thenBranch = this.statement();
+                
+                let elseBranch = null;
+                if (this.match("keyword") && this.previous().data === "else") {
+                    elseBranch = this.statement();
+                }
+                
+                return new IfStmt(condition, thenBranch, elseBranch);
             }
         }
-
-        return { type: "ClassDeclaration", name, superclass, fields, constructor, methods };
-    }
-
-    parseConstructor() {
-        this.match("keyword"); // 'init'
-        let params = this.parseParameters();
-        this.match("lCurlyBracket"); // '{'
-        let body = this.parseBlock();
-        return { type: "Constructor", params, body };
-    }
-
-    parseMethod() {
-        this.match("keyword"); // 'method'
-        let name = this.match("identifier").value;
-        let params = this.parseParameters();
-        let returnType = this.match("type").value;
-        let body = this.parseBlock();
-        return { type: "Method", name, params, returnType, body };
-    }
-
-    parseParameters() {
-        this.match("lParen"); // '('
-        let params = [];
-        while (!this.match("rParen")) {
-            let type = this.match("type").value;
-            let name = this.match("identifier").value;
-            params.push({ type, name });
-            this.match("comma"); // ','
+        
+        // Check for variable declaration
+        if (this.peek().type === "type" || 
+            (this.peek().type === "identifier" && 
+             this.checkNext("identifier") && 
+             !this.checkAhead(2, "equals"))) {
+            const varDec = this.varDeclaration();
+            this.consume("semicolon", "Expected ';' after variable declaration");
+            return new VarDecStmt(varDec);
         }
-        return params;
-    }
-
-    parseVarDeclaration() {
-        let type = this.match("type").value;
-        let name = this.match("identifier").value;
-        this.match("semicolon"); // ';'
-        return { type: "VariableDeclaration", varType: type, name };
-    }
-
-    parseStatement() {
-        if (this.match("lCurlyBracket")) {
-            return this.parseBlock();
+        
+        // Check for assignment
+        if (this.peek().type === "identifier" && this.checkNext("equals")) {
+            const name = this.advance().data;
+            this.consume("equals", "Expected '=' after variable name");
+            const value = this.expression();
+            this.consume("semicolon", "Expected ';' after assignment");
+            return new AssignStmt(name, value);
         }
-        if (this.peek().value === "if") {
-            return this.parseIfStatement();
-        }
-        if (this.peek().value === "while") {
-            return this.parseWhileStatement();
-        }
-        return this.parseExpressionStatement();
+        
+        // Expression statement
+        const expr = this.expression();
+        this.consume("semicolon", "Expected ';' after expression");
+        return new ExprStmt(expr);
     }
 
-    parseBlock() {
-        let statements = [];
-        while (!this.match("rCurlyBracket")) {
-            statements.push(this.parseStatement());
+    checkAhead(offset, type) {
+        if (this.current + offset >= this.tokens.length) return false;
+        return this.tokens[this.current + offset].type === type;
+    }
+
+    // exp ::= add_exp
+    expression() {
+        return this.additiveExpression();
+    }
+    
+    // add_exp ::= mult_exp ((`+` | `-`) mult_exp)*
+    additiveExpression() {
+        let expr = this.multiplicativeExpression();
+        
+        while (this.match("op")) {
+            const operator = this.previous().data;
+            if (operator === "+" || operator === "-") {
+                const right = this.multiplicativeExpression();
+                expr = new BinaryExpr(expr, operator, right);
+            } else {
+                this.current--; // Rewind if not a + or - operator
+                break;
+            }
         }
-        return { type: "Block", statements };
+        
+        return expr;
     }
-
-    parseExpressionStatement() {
-        let expression = this.parseExpression();
-        this.match("semicolon"); // ';'
-        return { type: "ExpressionStatement", expression };
-    }
-
-    parseExpression() {
-        return this.parseAddition();
-    }
-
-    parseAddition() {
-        let left = this.parseMultiplication();
-        while (this.match("op")?.value === "+") {
-            let right = this.parseMultiplication();
-            left = { type: "BinaryExpression", operator: "+", left, right };
+    
+    // mult_exp ::= call_exp ((`*` | `/`) call_exp)*
+    multiplicativeExpression() {
+        let expr = this.callExpression();
+        
+        while (this.match("op")) {
+            const operator = this.previous().data;
+            if (operator === "*" || operator === "/") {
+                const right = this.callExpression();
+                expr = new BinaryExpr(expr, operator, right);
+            } else {
+                this.current--;
+                break;
+            }
         }
-        return left;
+        
+        return expr;
     }
-
-    parseMultiplication() {
-        let left = this.parsePrimary();
-        while (this.match("op")?.value === "*") {
-            let right = this.parsePrimary();
-            left = { type: "BinaryExpression", operator: "*", left, right };
+    
+    // call_exp ::= primary_exp (`.` methodname `(` comma_exp `)`)* 
+    callExpression() {
+        let expr = this.primaryExpression();
+        
+        while (true) {
+            if (this.match("dot")) {
+                const method = this.consume("identifier", "Expected method name after '.'").data;
+                this.consume("lParen", "Expected '(' after method name");
+                
+                const args = [];
+                if (!this.check("rParen")) {
+                    do {
+                        args.push(this.expression());
+                    } while (this.match("comma"));
+                }
+                
+                this.consume("rParen", "Expected ')' after arguments");
+                expr = new CallExpr(expr, method, args);
+            } else {
+                break;
+            }
         }
-        return left;
+        
+        return expr;
     }
-
-    parsePrimary() {
-        let token = this.advance();
-        if (token.type === "integerLiteral" || token.type === "stringLiteral" || token.type === "identifier") {
-            return { type: "Literal", value: token.value };
+    
+    // primary_exp ::= var | str | i | `(` exp `)` | `this` | `true` | `false` 
+    //               | `println` `(` exp `)` | `new` classname `(` comma_exp `)`
+    primaryExpression() {
+        if (this.match("identifier")) {
+            return new VariableExpr(this.previous().data);
         }
-        throw new Error("Unexpected token: " + token.value);
+        
+        if (this.match("stringLiteral")) {
+            return new LiteralExpr(this.previous().data, "string");
+        }
+        
+        if (this.match("integerLiteral")) {
+            return new LiteralExpr(parseInt(this.previous().data), "int");
+        }
+        
+        if (this.match("keyword")) {
+            const keyword = this.previous().data;
+            
+            if (keyword === "this") {
+                return new ThisExpr();
+            }
+            
+            if (keyword === "true") {
+                return new LiteralExpr(true, "boolean");
+            }
+            
+            if (keyword === "false") {
+                return new LiteralExpr(false, "boolean");
+            }
+            
+            if (keyword === "println") {
+                this.consume("lParen", "Expected '(' after 'println'");
+                const argument = this.expression();
+                this.consume("rParen", "Expected ')' after argument");
+                return new PrintlnExpr(argument);
+            }
+            
+            if (keyword === "new") {
+                const className = this.consume("identifier", "Expected class name after 'new'").data;
+                this.consume("lParen", "Expected '(' after class name");
+                
+                const args = [];
+                if (!this.check("rParen")) {
+                    do {
+                        args.push(this.expression());
+                    } while (this.match("comma"));
+                }
+                
+                this.consume("rParen", "Expected ')' after arguments");
+                return new NewExpr(className, args);
+            }
+        }
+        
+        if (this.match("lParen")) {
+            const expr = this.expression();
+            this.consume("rParen", "Expected ')' after expression");
+            return expr;
+        }
+        
+        throw new Error(`Unexpected token ${this.peek().type}: ${this.peek().data}`);
     }
 }
 
-export function runParser(sourceCode) {
-    const tokens = runLexer(sourceCode);
+export default Parser;
+
+export const runParser = (tokens) => {
     const parser = new Parser(tokens);
-    return parser.parseProgram();
-}
+    return parser.parse();
+};
