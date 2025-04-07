@@ -1,4 +1,4 @@
-import Token from "./token.js";
+import Token from "../tokenizer/token.js";
 
 class ASTNode {
     constructor(type) {
@@ -53,9 +53,9 @@ class MethodDef extends ASTNode {
 }
 
 class SuperCall extends ASTNode {
-    constructor(arguments) {
+    constructor(args) {
         super("SuperCall");
-        this.arguments = arguments || [];
+        this.arguments = args || [];
     }
 }
 

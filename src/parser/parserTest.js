@@ -1,65 +1,31 @@
-import { runLexer } from './lexer.js';
+import { runLexer } from '../tokenizer/lexer.js';
 import { runParser } from './parser.js';
 
 
 const testProgram = `
 class Animal {
-    Int age;
-    
-    init(Int initialAge) {
-        age = initialAge;
-    }
-    
-    method getAge() Int {
-        return age;
-    }
-    
-    method makeSound() String {
-        return "Generic animal sound";
-    }
+  init() {}
+  method speak() Void { return println(0); }
 }
-
+class Cat extends Animal {
+  init() { super(); }
+  method speak() Void { return println(1); }
+}
 class Dog extends Animal {
-    String breed;
-    
-    init(Int age, String dogBreed) {
-        super(age);
-        breed = dogBreed;
-    }
-    
-    method makeSound() String {
-        return "Woof!";
-    }
-    
-    method getBreed() String {
-        return breed;
-    }
+  init() { super(); }
+  method speak() Void { return println(2); }
 }
 
-// Main program
-Int age = 5;
-String breed = "Golden Retriever";
-Dog myDog = new Dog(age, breed);
-println(myDog.getAge());
-println(myDog.makeSound());
-println(myDog.getBreed());
-
-if (myDog.getAge() > 3) {
-    println("Older dog");
-} else {
-    println("Younger dog");
-}
-
-Int i = 0;
-while (i < 3) {
-    println(i);
-    i = i + 1;
-}
+Animal cat;
+Animal dog;
+cat = new Cat();
+dog = new Dog();
+cat.speak();
+dog.speak();
 `;
 
 // Run the lexer
 const tokens = runLexer(testProgram);
-console.log("Tokens:", tokens);
 
 // Run the parser
 const ast = runParser(tokens);
