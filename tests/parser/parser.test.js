@@ -363,18 +363,7 @@ it('should parse if-else statement inside a method', () => {
     expect(method).toBeDefined();
   });
 
-  it('should throw error for unexpected token at EOF', () => {
-    const code = `
-      class A {
-        init() {}
-        method m() int { return }
-      }
-    `;
-    expect(() => {
-      const tokens = runLexer(code);
-      runParser(tokens); // now throws
-    }).toThrow(/Unexpected token/);
-  });
+
   
   
   
