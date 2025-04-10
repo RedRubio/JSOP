@@ -179,28 +179,22 @@ class Parser {
   }
 
   parse() {
-    try {
-      const classes = [];
-      // Guard against running past the token list.
-      while (!this.isAtEnd() &&
-             this.peek().type === "keyword" &&
-             this.peek().data === "class") {
-        classes.push(this.classDefinition());
-      }
-
-      const statements = [];
-      while (!this.isAtEnd()) {
-        statements.push(this.statement());
-      }
-
-      return new Program(classes, statements);
-    } catch (error) {
-      console.error("Parse error:", error);
-      return null;
+    // ❌ Removed try/catch block so errors will bubble up
+    const classes = [];
+    while (!this.isAtEnd() &&
+           this.peek().type === "keyword" &&
+           this.peek().data === "class") {
+      classes.push(this.classDefinition());
     }
+
+    const statements = [];
+    while (!this.isAtEnd()) {
+      statements.push(this.statement());
+    }
+
+    return new Program(classes, statements);
   }
 
-  // Helper methods
   peek() {
     return this.tokens[this.current];
   }
@@ -238,8 +232,6 @@ class Parser {
     throw new Error(`${message} at token ${this.peek() ? this.peek().type + ", " + this.peek().data : "EOF"}`);
   }
 
-  // Grammar parsing methods
-
   // classdef ::= `class` classname [`extends` classname] `{` (vardec `;`)* constructor methoddef* `}`
   classDefinition() {
     this.consume("keyword", "Expected 'class' keyword");
@@ -253,11 +245,10 @@ class Parser {
     this.consume("lCurlyBracket", "Expected '{' after class declaration");
 
     const variables = [];
-    // Added guard for isAtEnd() before using peek()
     while (!this.isAtEnd() && (this.peek().type === "type" ||
-           (this.peek().type === "identifier" &&
-            this.checkNext("lParen") === false &&
-            this.checkNext("keyword", "init") === false))) {
+          (this.peek().type === "identifier" &&
+           this.checkNext("lParen") === false &&
+           this.checkNext("keyword", "init") === false))) {
       variables.push(this.varDeclaration());
       this.consume("semicolon", "Expected ';' after variable declaration");
     }
@@ -273,7 +264,6 @@ class Parser {
     }
 
     this.consume("rCurlyBracket", "Expected '}' after class body");
-
     return new ClassDef(className, parentClass, variables, constructorNode, methods);
   }
 
@@ -284,7 +274,6 @@ class Parser {
     return true;
   }
 
-  // vardec ::= type var
   varDeclaration() {
     let type;
     if (this.peek().type === "type") {
@@ -324,7 +313,6 @@ class Parser {
 
       this.consume("rParen", "Expected ')' after super arguments");
       this.consume("semicolon", "Expected ';' after super call");
-
       superCall = new SuperCall(args);
     }
 
@@ -334,7 +322,6 @@ class Parser {
     }
 
     this.consume("rCurlyBracket", "Expected '}' after constructor body");
-
     return new Constructor(parameters, superCall, statements);
   }
 
@@ -369,12 +356,9 @@ class Parser {
     }
 
     this.consume("rCurlyBracket", "Expected '}' after method body");
-
     return new MethodDef(name, parameters, returnType, statements);
   }
 
-  // stmt ::= exp `;` | vardec `;` | var `=` exp `;` | `while` `(` exp `)` stmt
-  //      | `break` `;` | `return` [exp] `;` | `if` `(` exp `)` stmt [`else` stmt] | `{` stmt* `}`
   statement() {
     if (this.match("lCurlyBracket")) {
       const statements = [];
@@ -416,28 +400,24 @@ class Parser {
         this.consume("rParen", "Expected ')' after condition");
 
         const thenBranch = this.statement();
-
         let elseBranch = null;
         if (!this.isAtEnd() && this.match("keyword") && this.previous().data === "else") {
           elseBranch = this.statement();
         }
-
         return new IfStmt(condition, thenBranch, elseBranch);
       }
     }
 
-    // Check for variable declaration
     if (!this.isAtEnd() &&
-        (this.peek().type === "type" ||
-         (this.peek().type === "identifier" &&
-          this.checkNext("identifier") &&
-          !this.checkAhead(2, "equals")))) {
+       (this.peek().type === "type" ||
+       (this.peek().type === "identifier" &&
+        this.checkNext("identifier") &&
+        !this.checkAhead(2, "equals")))) {
       const varDec = this.varDeclaration();
       this.consume("semicolon", "Expected ';' after variable declaration");
       return new VarDecStmt(varDec);
     }
 
-    // Check for assignment
     if (!this.isAtEnd() && this.peek().type === "identifier" && this.checkNext("equals")) {
       const name = this.advance().data;
       this.consume("equals", "Expected '=' after variable name");
@@ -472,7 +452,7 @@ class Parser {
         const right = this.multiplicativeExpression();
         expr = new BinaryExpr(expr, operator, right);
       } else {
-        this.current--; // Rewind if not a + or - operator
+        this.current--;
         break;
       }
     }
@@ -571,7 +551,6 @@ class Parser {
             args.push(this.expression());
           } while (this.match("comma"));
         }
-
         this.consume("rParen", "Expected ')' after arguments");
         return new NewExpr(className, args);
       }
@@ -583,14 +562,15 @@ class Parser {
       return expr;
     }
 
+    // If we get here, it's truly unexpected input => throw
     throw new Error(`Unexpected token ${this.peek() ? this.peek().type : "EOF"}: ${this.peek() ? this.peek().data : ""}`);
   }
 }
 
 export default Parser;
 
+// We no longer catch inside parse() so it can throw an Error for tests using .toThrow()
 export const runParser = (tokens) => {
   const parser = new Parser(tokens);
-  return parser.parse();
+  return parser.parse(); // No try/catch here either
 };
-
