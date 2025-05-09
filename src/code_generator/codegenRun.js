@@ -29,10 +29,10 @@ const tokens = runLexer(testProgram);
 
 // Run parser
 const ast = runParser(tokens);
-console.log(ast);
-// Run codegen
-//const code = runCodegen(ast);
+//console.log(ast);
 
-// Output final JavaScript code
-//console.log("\nGenerated JavaScript Code:\n");
-//console.log(code);
+// Run codegen
+const code = runCodegen(ast);
+
+//Output final JavaScript code
+console.log(code);
