@@ -10,6 +10,7 @@ export class CodeGenerator extends CodegenDispatch {
 
 	generate() {
 		this.code = '';
+		//const lines = [];
 
 		for (const classDef of this.classDefs) {
       //console.log(classDef)
@@ -20,6 +21,9 @@ export class CodeGenerator extends CodegenDispatch {
       //console.log(stmt)
 			this.code += this.dispatchGenerate('stmt', stmt) + '\n';
 		}
+		
+		//this.code = lines.join('\n');
+
 		return this.code;
 	}
 }

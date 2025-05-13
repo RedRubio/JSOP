@@ -15,7 +15,7 @@ import {
 function compile(sourceCode) {
   try {
     const tokens = runLexer(sourceCode);
-    const ast = runParser(tokens);
+    const ast = runParser(tokens); 
     runTypeChecker(ast); // Throws if there's a type error
     return { success: true };
   } catch (error) {
