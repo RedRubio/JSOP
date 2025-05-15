@@ -1,33 +1,11 @@
 // codegen.test.js
-
+//used Richmonds parser.test cases, and Chris' lexer.test layout, for the codegen testing setup - Eric
 import { runLexer } from "../../src/tokenizer/lexer.js";
 import { runParser } from '../../src/parser/parser.js';
 import { runCodegen } from '../../src/code_generator/codegen.js';
 
-const testProgram = `
-class Animal {
-  init() {}
-  method speak() Void { return println(0); }
-}
-class Cat extends Animal {
-  init() { super(); }
-  method speak() Void { return println(1); }
-}
-class Dog extends Animal {
-  init() { super(); }
-  method speak() Void { return println(2); }
-}
-
-Animal cat;
-Animal dog;
-cat = new Cat();
-dog = new Dog();
-cat.speak();
-dog.speak();
-`;
-
-describe('Tokenizer Test', () => {
-  it('Parsing variable declaration', () => {
+describe('Codegen Test', () => {
+  it('Animal Class', () => {
       const data =  `
 class Animal {
   init() {}
@@ -83,8 +61,6 @@ cat.speak();
 dog.speak();
 `
 
-      //expect(result).toStrictEqual(expected);
-      //const normalize = str => str.trim().replace(/\r\n/g, '\n');
       const normalize = str =>
         str
         .trim()
@@ -93,151 +69,222 @@ dog.speak();
         .map(line => line.trimStart())
         .join('\n');
       expect(normalize(result)).toStrictEqual(normalize(expected));
-      console.log("Success: Parsing Variable declaration");
+      console.log("Success: Generated Animal Class to js");
   });
-});
 
-it('Parsing binary expression', () => {
-    const data = "5 + 3;";
-    
-    const expected = `5 + 3;`;
 
-    const tokens = runLexer(data);
-    const ast = runParser(tokens);
-    const result = runCodegen(ast);
+   it('Test Class', () => {
+      const data = `class Test {
+  init() {}
+  method foo() int { return 42; }
+}`;
 
-    const normalize = str =>
-      str
+      const tokens = runLexer(data);
+      const ast = runParser(tokens);
+      const result = runCodegen(ast);
+
+const expected = 
+` function Test() {
+    }
+    Test.prototype.foo = function() {
+    return 42;
+    };
+`
+
+      const normalize = str =>
+        str
         .trim()
         .replace(/\r\n/g, '\n')
         .split('\n')
         .map(line => line.trimStart())
         .join('\n');
+      expect(normalize(result)).toStrictEqual(normalize(expected));
+      console.log("Success: Test class to js");
+  });
 
-    expect(normalize(result)).toStrictEqual(normalize(expected));
-    console.log("Success: Parsing binary expression");
-});
+   it('Inheritance Test', () => {
+      const data = `class Parent {
+  init() {}
+  method m() int { return 10; }
+}
+class Child extends Parent {
+  init() { super(); }
+  method m() int { return 20; }
+}`;
 
-/*it('Parsing this expression', () => {
-    const data = "this;";
+      const tokens = runLexer(data);
+      const ast = runParser(tokens);
+      const result = runCodegen(ast);
 
-    const expected = `this;`;
+const expected = 
+`   
+     function Parent() {
+      }
+     Parent.prototype.m = function() {
+     return 10;
+     };
+     function Child() {
+     Parent.call(this);
+     }
+     Child.prototype = Object.create(Parent.prototype);
+     Child.prototype.constructor = Child;
+     Child.prototype.m = function() {
+     return 20;
+     };
+`
 
-    const tokens = runLexer(data);
-    const ast = runParser(tokens);
-    const result = runCodegen(ast);
-
-    const normalize = str =>
+      const normalize = str =>
         str
-            .trim()
-            .replace(/\r\n/g, '\n')
-            .split('\n')
-            .map(line => line.trimStart())
-            .join('\n');
+        .trim()
+        .replace(/\r\n/g, '\n')
+        .split('\n')
+        .map(line => line.trimStart())
+        .join('\n');
+      expect(normalize(result)).toStrictEqual(normalize(expected));
+      console.log("Success: Inheritance to js");
+  });
 
-    expect(normalize(result)).toStrictEqual(normalize(expected));
-    console.log("Success: Parsing this expression");
-});
 
-it('Generates code for this expression', () => {
-    const fakeAst = {
-        classDefs: [],
-        stmts: [
-            {
-                kind: 'expr',
-                expr: {
-                    type: 'ThisExpr'
-                }
-            }
-        ]
+     it('While Test', () => {
+      const data = `class Loop {
+  init() {}
+  method count() Void {
+    while (1) {
+      return println(5);
+    }
+  }
+}`;
+
+      const tokens = runLexer(data);
+      const ast = runParser(tokens);
+      const result = runCodegen(ast);
+
+const expected = 
+`   function Loop() {
+      }
+     Loop.prototype.count = function() {
+     while (1) {
+     return console.log(5);
+     }
+     };
+`
+
+     
+      const normalize = str =>
+        str
+        .trim()
+        .replace(/\r\n/g, '\n')
+        .split('\n')
+        .map(line => line.trimStart())
+        .join('\n');
+      expect(normalize(result)).toStrictEqual(normalize(expected));
+      console.log("Success: While to js");
+  });
+
+
+     it('Break Test', () => {
+      const data = `class Breaker {
+  init() {}
+  method run() Void {
+    break;
+  }
+}`;
+
+      const tokens = runLexer(data);
+      const ast = runParser(tokens);
+      const result = runCodegen(ast);
+
+const expected = 
+`  
+     function Breaker() {
+     }
+     Breaker.prototype.run = function() {
+     break;
+      };
+`
+
+      
+      const normalize = str =>
+        str
+        .trim()
+        .replace(/\r\n/g, '\n')
+        .split('\n')
+        .map(line => line.trimStart())
+        .join('\n');
+      expect(normalize(result)).toStrictEqual(normalize(expected));
+      console.log("Success: break to js");
+  });
+
+it('if-else Test', () => {
+      const data = `class Logic {
+  init() {}
+  method decide() Void {
+    if (1) { return println(1); } else { return println(0); }
+  }
+}`;
+
+      const tokens = runLexer(data);
+      const ast = runParser(tokens);
+      const result = runCodegen(ast);
+
+const expected = 
+` 
+function Logic() {
+}
+    Logic.prototype.decide = function() {
+    if (1) {
+    return console.log(1);
+    } else {
+    return console.log(0);
+    }
+    }; 
+`
+
+      const normalize = str =>
+        str
+        .trim()
+        .replace(/\r\n/g, '\n')
+        .split('\n')
+        .map(line => line.trimStart())
+        .join('\n');
+      expect(normalize(result)).toStrictEqual(normalize(expected));
+      console.log("Success: if-else to js");
+  });
+
+  it('Three Argument Test', () => {
+      const data = `class Util {
+  init() {}
+  method combine(int a, int b, int c) int {
+    return a + b + c;
+  }
+}
+Util u;
+u = new Util();
+u.combine(1, 2, 3);`;
+
+      const tokens = runLexer(data);
+      const ast = runParser(tokens);
+      const result = runCodegen(ast);
+
+const expected = 
+`function Util() {
+  }
+    Util.prototype.combine = function(a, b, c) {
+    return a + b + c;
     };
+    let u; // Util
+    u = new Util();
+    u.combine(1, 2, 3); `
 
-    const result = runCodegen(fakeAst);
-    expect(result.trim()).toBe('this;');
-    console.log("Success: Parsing 'this' expression through codegen");
-});
-
-
-
-
-
-it('Throws error on unknown expression type', () => {
-    
-    const fakeAst = {
-       classDefs: [],
-        stmts: [
-            {
-                kind: 'expr',
-                expr: {
-                    type: 'UnknownExpr'  
-                }
-            }
-        ]
-    };
-
-    expect(() => runCodegen(fakeAst)).toThrowError(
-        ("undefined is not iterable (cannot read property Symbol(Symbol.iterator))")
-    );
-
-    console.log("Success: Error thrown for unknown expression type");
-}); */
-
-
-it('Generates code for if statement with else', () => {
-    const data = `
-        let x;
-        x = 10;
-        if ((x < 20)) x = 1; else x = 2;
-        
-    `;
-
-    const expected = `if (1 < 2) println(1); else println(2);`;
-
-    const tokens = runLexer(data);
-    const ast = runParser(tokens);
-    const result = runCodegen(ast);
-
-    const normalize = str =>
+      const normalize = str =>
         str
-            .trim()
-            .replace(/\r\n/g, '\n')
-            .split('\n')
-            .map(line => line.trimStart())
-            .join('\n');
+        .trim()
+        .replace(/\r\n/g, '\n')
+        .split('\n')
+        .map(line => line.trimStart())
+        .join('\n');
+      expect(normalize(result)).toStrictEqual(normalize(expected));
+      console.log("Success: Three Argument to js");
+  });
 
-    expect(normalize(result)).toStrictEqual(normalize(expected));
-    console.log("Success: If statement with else");
 });
-
-it('Generates code for if statement without else', () => {
-    const data = `
-       let x;
-       x = 10;
-       if ((x < 20)) x = 1;
-        
-    `;
-
-    const expected = `if (1 < 2) println(1);`;
-
-    const tokens = runLexer(data);
-    const ast = runParser(tokens);
-    const result = runCodegen(ast);
-
-    const normalize = str =>
-        str
-            .trim()
-            .replace(/\r\n/g, '\n')
-            .split('\n')
-            .map(line => line.trimStart())
-            .join('\n');
-
-    expect(normalize(result)).toStrictEqual(normalize(expected));
-    console.log("Success: If statement without else");
-});
-
-
-
-
-
-// eval(generatedCode); 
-// Expected output: 3 (because `break` occurs when `i == 3`)

@@ -1,11 +1,11 @@
-// The general idea is that the dispatchGenerate receives the kind of node and the node object of the AST.
+// The general idea is that the dispatchGenerate receives the kind of node and node.
 // It finds the matching case and performs the corrresponding actions sometimes just returning a string sometimes it recursively calls itself for child nodes in the tree.
 // so it builds the js code kind of like if its traversing a tree in a dfs so that the correct structure and nesting is maintained.
 //
 // I named it dispatch becasue originally it was going to find the case and then "dispatch" to dedicated functions for each case.
 // But as i started working on it most of the cases ended up being one or two lines so i didn't make functions for them.
 // and then as I continued working I just decided to keep eveything together.
-// The result is kind of a nightmare for readability so I apologize in advance but it works and its less code than making it modular so its got that going for it.
+// I apologize in advance for the result of these poor decisions. -Eric
 export class CodegenDispatch {
 	dispatchGenerate(kind, node) {
 		switch (kind) {
@@ -36,9 +36,6 @@ export class CodegenDispatch {
 
 					case 'ThisExpr':
 						return 'this';
-
-					default:
-						throw new Error("No generator for expr node:" + node.type);
 				}
 
 			case 'stmt':
@@ -81,11 +78,13 @@ export class CodegenDispatch {
 						}
 						return '{\n' + blockLines.join('\n') + '\n}';
 					}
-
-					default:
-						throw new Error("No generator for stmt node:" + node.type);
 				}
-
+			
+			//In the interest of full discolusre I wanted to mention that I ended up having to use Chatgpt to implement the section below, I hope you'll hear me out before you judge me too harshly.
+			//I already knew what I wanted to do here, build the js code lines checking to see what format the class should take then calling the dispatch recursively to build the lines.
+			//I even had a semi-working version I made myself but then I remembered there was certain restrictions on the output.
+			//I checked the proposal and that's when I saw that it required us to set it up for prototype based inheritance instead of using extends and super.
+			//I had trouble figuring it out, and in hindsight I should have asked my team but I panicked and ended up making a bad call. -Eric
 			case 'class':
 				switch (node.type) {
 					case 'ClassDef': {
